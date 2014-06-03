@@ -5,15 +5,16 @@ using System.Text;
 
 namespace GrammarTools
 {
-    class Terminal : IToken
+    class Terminal : Token
     {
-        
         public Terminal(string value)
-        {
-            Value = value;
-        }
+            : base(value)
+        { }
 
-        public string Value { get; private set; }
+        public bool IsTerminal
+        {
+            get { return true; }
+        }
 
         public bool IsTerminal
         {

@@ -5,15 +5,12 @@ using System.Text;
 
 namespace GrammarTools
 {
-    class NonTerminal : IToken
+    class NonTerminal : Token
     {
         public NonTerminal(string value)
-        {
-            Value = value;
-        }
+            : base(value)
+        { }
         
-        public string Value { get; private set; }
-
         public bool IsTerminal
         {
             get { return true; }

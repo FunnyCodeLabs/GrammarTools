@@ -27,7 +27,11 @@ namespace GrammarTools
 
 
             string right = rightLeft[0].Trim();
-            if (!Regex.IsMatch(right, nonTermPattern)
+<<<<<<< Updated upstream
+            if (AddNonTerminal(right))
+=======
+            if (!Regex.IsMatch(right, nonTermPattern))
+>>>>>>> Stashed changes
                 throw new ApplicationException();
 
             if (rightLeft.Length == 1)
