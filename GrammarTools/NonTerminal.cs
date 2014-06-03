@@ -5,7 +5,7 @@ using System.Text;
 
 namespace GrammarTools
 {
-    class NonTerminal : Token
+    public class NonTerminal : Token
     {
         public NonTerminal(string value)
             : base(value)
@@ -13,7 +13,7 @@ namespace GrammarTools
         
         public override bool IsTerminal
         {
-            get { return true; }
+            get { return false; }
         }
 
         public List<Rule> Rules

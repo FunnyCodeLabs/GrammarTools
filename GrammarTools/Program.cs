@@ -10,27 +10,31 @@ namespace GrammarTools
         static void Main(string[] args)
         {
             string[] grammar = new string[] { 
-                "S -> a B D", 
-                "S -> a D", 
+                "S -> A b S", 
                 "S -> A C", 
-                "S -> b",
-                "A -> S C B",
-                "A -> S A B C",
-                "A -> C b D",
-                "A -> e",
-                "B -> C A", 
-                "B -> d", 
-                "C -> A D C", 
-                "C -> a",
+
+                "A -> B D",
+
+                "B -> B C", 
+                "B -> e", 
+
+                "C -> S a", 
                 "C -> e",
-                "D -> E a C", 
-                "D -> S C", 
-                "E -> B C S", 
-                "E -> a", 
+
+                "D -> a B", 
+                "D -> B A", 
             };
             Grammar g = Grammar.Create(grammar);
 
-            var a = g.FindEpsilonNonterminals();
+            var b = g.FindEpsilonNonterminals();
+            foreach (var item in b)
+            {
+                Console.WriteLine(item);
+            }
+
+            Console.WriteLine();
+
+            var a = g.RecursiveNonterminals(true);
             foreach (var item in a)
             {
                 Console.WriteLine(item);

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace GrammarTools
 {
-    interface IToken
+    public interface IToken
     {
         bool IsTerminal { get; }
         string Value { get; }

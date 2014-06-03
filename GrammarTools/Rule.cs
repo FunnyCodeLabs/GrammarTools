@@ -5,7 +5,7 @@ using System.Text;
 
 namespace GrammarTools
 {
-    class Rule
+    public class Rule
     {
         public NonTerminal LeftPart { get; private set; }
 

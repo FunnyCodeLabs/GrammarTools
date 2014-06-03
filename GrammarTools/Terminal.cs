@@ -5,7 +5,7 @@ using System.Text;
 
 namespace GrammarTools
 {
-    class Terminal : Token
+    public class Terminal : Token
     {
         public Terminal(string value)
             : base(value)
