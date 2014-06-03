@@ -12,12 +12,25 @@ namespace GrammarTools
         private Dictionary<string, Terminal> __Terminals = new Dictionary<string, Terminal>();
         private List<Rule> __Rules = new List<Rule>();
         private readonly Terminal __Epsilon = new Terminal("e");
-        private List<NonTerminal> __EpsilonNonterminals = null;
+
+        private HashSet<NonTerminal> __EpsilonNonterminals = null;
 
         public Grammar()
         {
             __Terminals.Add("e", __Epsilon);
         }
+
+        public HashSet<NonTerminal> EpsilonNonterminals
+        {
+            get
+            {
+                if (__EpsilonNonterminals == null)
+                    FindEpsilonNonterminals();
+                return __EpsilonNonterminals;
+            }
+        }
+
+        #region Grammar construction
 
         private void AddRule(string line)
         {
@@ -95,13 +108,11 @@ namespace GrammarTools
             return true;
         }
 
-        public static Grammar Create(string[] input)
-        {
-            Grammar grammar = new Grammar();
-            foreach (var line in input)
-                grammar.AddRule(line);
+        #endregion
 
-            return grammar;
+        private bool DirectlyProduces(NonTerminal A, IEnumerable<IToken> alpha)
+        {
+            return A.Rules.Any(x => x.RightPart.SequenceEqual(alpha));
         }
 
         public IEnumerable<NonTerminal> FindEpsilonNonterminals()
@@ -146,12 +157,16 @@ namespace GrammarTools
             }
             while (currentStage.Count != 0);
 
-            return epsilonNonterminals;
+            return __EpsilonNonterminals = epsilonNonterminals;
         }
 
-        private bool DirectlyProduces(NonTerminal A, IEnumerable<IToken> alpha)
+        public static Grammar Create(string[] input)
         {
-            return A.Rules.Any(x => x.RightPart.SequenceEqual(alpha));
+            Grammar grammar = new Grammar();
+            foreach (var line in input)
+                grammar.AddRule(line);
+
+            return grammar;
         }
     }
 }
