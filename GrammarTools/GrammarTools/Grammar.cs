@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace GrammarTools
 {
@@ -22,8 +23,14 @@ namespace GrammarTools
             string[] rightLeft = line.Split(new string[] { "->" }, StringSplitOptions.RemoveEmptyEntries);
             if (rightLeft.Length != 2)
                 throw new ApplicationException("Error parsing: [" + line + "]");
+            
+            string termPattern = "[a-z|+|-|*|/|(|)]";
+            string nonTermPattern = "[A-Z]";
 
             string right = rightLeft[0].Trim();
+            if (!Regex.IsMatch(right, nonTermPattern)
+                throw new ApplicationException();
+
             NonTerminal nonTerminal;
             if (__NonTerminals.ContainsKey(right))
                 nonTerminal = __NonTerminals[right];
