@@ -104,28 +104,49 @@ namespace GrammarTools
             return grammar;
         }
 
-        public List<NonTerminal> FindEpsilonNonterminals()
+        public IEnumerable<NonTerminal> FindEpsilonNonterminals()
         {
             if (__EpsilonNonterminals != null)
                 return __EpsilonNonterminals;
 
-            List<IToken> epsilonRightPart = new List<IToken>();
+            List<NonTerminal> epsilonRightPart = new List<NonTerminal>();
 
             HashSet<NonTerminal> epsilonNonterminals = new HashSet<NonTerminal>();
+            HashSet<NonTerminal> currentStage = new HashSet<NonTerminal>();
 
             //Добавляем все нетерминалы, которые напрямую продуцируют в epsilon
             foreach (var nonterm in __NonTerminals.Values)
             {
-                if (DirectlyProduces(nonterm, epsilonRightPart))
+                if (DirectlyProduces(nonterm, epsilonRightPart.Cast<IToken>()))
                     epsilonNonterminals.Add(nonterm);
             }
 
-            //Добавляем все нетерминалы, которые продуцирут в цепочку только из 
+            do
+            {
+                foreach (var nonterm in __NonTerminals.Values)
+                {
+                    bool match = true;
+                    //Добавляем все нетерминалы, которые продуцирут в цепочку только из токенов прошлого шага
+                    foreach (var token in nonterm.Rule.RightPart)
+                    {
+                        if (!epsilonNonterminals.Contains(token))
+                        {
+                            match = false;
+                            break;
+                        }
+                    }
 
-            throw new NotImplementedException();
+                    if (match)
+                        currentStage.Add(nonterm);
+                }
+                epsilonNonterminals.UnionWith(currentStage);
+            }
+            while (currentStage.Count != 0);
+
+            return epsilonNonterminals;
         }
 
-        private bool DirectlyProduces(NonTerminal A, List<IToken> alpha)
+        private bool DirectlyProduces(NonTerminal A, IEnumerable<IToken> alpha)
         {
             return A.Rule.RightPart.SequenceEqual(alpha);
         }
