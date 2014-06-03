@@ -21,40 +21,69 @@ namespace GrammarTools
         private void AddRule(string line)
         {
             string[] rightLeft = line.Split(new string[] { "->" }, StringSplitOptions.RemoveEmptyEntries);
-            if (rightLeft.Length != 2)
+            if (rightLeft.Length < 1)
                 throw new ApplicationException("Error parsing: [" + line + "]");
-            
-            string termPattern = "[a-z|+|-|*|/|(|)]";
-            string nonTermPattern = "[A-Z]";
+
 
             string right = rightLeft[0].Trim();
-            if (!Regex.IsMatch(right, nonTermPattern)
+            if (AddNonTerminal(right))
                 throw new ApplicationException();
 
-            NonTerminal nonTerminal;
-            if (__NonTerminals.ContainsKey(right))
-                nonTerminal = __NonTerminals[right];
+            if (rightLeft.Length == 1)
+            {
+
+            }
             else
             {
-                nonTerminal = new NonTerminal(right);
-                __NonTerminals.Add(right, nonTerminal);
-            }
+                string left = rightLeft[1].Trim();
+                string[] tokenStrings = left.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
-            string left = rightLeft[1].Trim();
-            string[] tokenStrings = left.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var tokenStr in tokenStrings)
-            {
-                IToken token;
-                if (__NonTerminals.ContainsKey(right))
-                    nonTerminal = __NonTerminals[right];
-                else
+                foreach (var tokenStr in tokenStrings)
                 {
-                    nonTerminal = new NonTerminal(right);
-                    __NonTerminals.Add(right, nonTerminal);
+                    IToken token;
+                    if (!AddNonTerminal(tokenStr))
+                        AddTerminal(tokenStr);
+
                 }
-                
             }
+        }
+
+        private bool AddNonTerminal(string nonTermString)
+        {
+            string nonTermPattern = "[A-Z]";
+
+            if (!Regex.IsMatch(nonTermString, nonTermPattern))
+                return false;
+
+            NonTerminal nonTerminal;
+            if (__NonTerminals.ContainsKey(nonTermString))
+                nonTerminal = __NonTerminals[nonTermString];
+            else
+            {
+                nonTerminal = new NonTerminal(nonTermString);
+                __NonTerminals.Add(nonTermString, nonTerminal);
+            }
+
+            return true;
+        }
+
+        private bool AddTerminal(string termString)
+        {
+            string termPattern = "[a-z|+|-|*|/|(|)]";
+
+            if (!Regex.IsMatch(termPattern, termString))
+                return false;
+
+            Terminal terminal;
+            if (__Terminals.ContainsKey(termString))
+                terminal = __Terminals[termString];
+            else
+            {
+                terminal = new Terminal(termString);
+                __Terminals.Add(termString, terminal);
+            }
+
+            return true;
         }
 
         public static Grammar Create(string[] input)
@@ -62,7 +91,7 @@ namespace GrammarTools
             Grammar grammar = new Grammar();
             foreach (var line in input)
                 grammar.AddRule(line);
-            
+
 
 
             return grammar;
