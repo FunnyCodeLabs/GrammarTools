@@ -9,6 +9,9 @@ namespace GrammarTools
     {
         static void Main(string[] args)
         {
+<<<<<<< Updated upstream
+            string[] grammar = new string[] { "S -> B C", "S -> e", "B -> D A", "A -> a" };
+=======
             string[] grammar = new string[] { 
                 "S -> a B D", 
                 "S -> a D", 
@@ -28,6 +31,7 @@ namespace GrammarTools
                 "E -> B C S", 
                 "E -> a", 
             };
+>>>>>>> Stashed changes
             Grammar g = Grammar.Create(grammar);
         }
     }

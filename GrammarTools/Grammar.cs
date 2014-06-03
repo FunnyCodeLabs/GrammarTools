@@ -107,7 +107,7 @@ namespace GrammarTools
             if (__EpsilonNonterminals != null)
                 return __EpsilonNonterminals;
 
-            List<NonTerminal> epsilonRightPart = new List<NonTerminal>();
+            List<Terminal> epsilonRightPart = new List<Terminal>() { __Epsilon };
 
             HashSet<NonTerminal> epsilonNonterminals = new HashSet<NonTerminal>();
             HashSet<NonTerminal> currentStage = new HashSet<NonTerminal>();
@@ -119,13 +119,14 @@ namespace GrammarTools
                     epsilonNonterminals.Add(nonterm);
             }
 
+            //Последовательно конструируем множество е-нетерминалов
+            //Добавляем только те нетерминалы, которые продуцирут в цепочку только из токенов прошлого шага
             do
             {
-                foreach (var nonterm in __NonTerminals.Values)
+                foreach (var rule in __Rules)
                 {
                     bool match = true;
-                    //Добавляем все нетерминалы, которые продуцирут в цепочку только из токенов прошлого шага
-                    foreach (var token in nonterm.Rule.RightPart)
+                    foreach (var token in rule.RightPart)
                     {
                         if (!epsilonNonterminals.Contains(token))
                         {
@@ -135,8 +136,9 @@ namespace GrammarTools
                     }
 
                     if (match)
-                        currentStage.Add(nonterm);
+                        currentStage.Add(rule.LeftPart);
                 }
+
                 epsilonNonterminals.UnionWith(currentStage);
             }
             while (currentStage.Count != 0);
@@ -146,7 +148,7 @@ namespace GrammarTools
 
         private bool DirectlyProduces(NonTerminal A, IEnumerable<IToken> alpha)
         {
-            return A.Rule.RightPart.SequenceEqual(alpha);
+            return A.Rules.Any(x => x.RightPart.SequenceEqual(alpha));
         }
     }
 }
