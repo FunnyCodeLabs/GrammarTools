@@ -21,18 +21,21 @@ namespace GrammarTools
 
         private void AddRule(string line)
         {
-            string[] rightLeft = line.Split(new string[] { "->" }, StringSplitOptions.RemoveEmptyEntries);
-            if (rightLeft.Length < 2)
-                throw new ApplicationException("Error parsing: [" + line + "]");
+            Regex rule = new Regex(@"([A-Z])\s+->\s+((([A-Z]|[a-z])\s*)+)");
 
+            var match = rule.Match(line);
 
-            string left = rightLeft[0].Trim();
+            if (!match.Success)
+                throw new InvalidOperationException();
+
+            var left = match.Groups[1].Value.Trim();
+            var rightSequence = match.Groups[2].Value.Trim();
+
             NonTerminal leftNonTerminal;
             if (!AddNonTerminal(left, out leftNonTerminal))
                 throw new ApplicationException();
 
-            string right = rightLeft[1].Trim();
-            string[] tokenStrings = right.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            var tokenStrings = (new Regex(@"\s+")).Split(rightSequence).Select(x => x.Trim());
 
             List<IToken> rightTokens = new List<IToken>();
             foreach (var tokenStr in tokenStrings)
@@ -50,14 +53,13 @@ namespace GrammarTools
                     rightTokens.Add(nonTerm);
             }
 
-            Rule rule = new Rule(leftNonTerminal, rightTokens);
-            __Rules.Add(rule);
+            Rule r = new Rule(leftNonTerminal, rightTokens);
+            __Rules.Add(r);
         }
 
         private bool AddNonTerminal(string nonTermString, out NonTerminal nonTerminal)
         {
-            string nonTermPattern = "[A-Z]";
-
+            string nonTermPattern = "[A-Z]+";
             nonTerminal = null;
             if (!Regex.IsMatch(nonTermString, nonTermPattern))
                 return false;
@@ -75,11 +77,11 @@ namespace GrammarTools
 
         private bool AddTerminal(string termString, out Terminal terminal)
         {
-            string termPattern = "[a-z|+|-|*|/|(|)]";
+            string termPattern = "[a-z]+";
 
             terminal = null;
 
-            if (!Regex.IsMatch(termPattern, termString))
+            if (!Regex.IsMatch(termString, termPattern))
                 return false;
 
             if (__Terminals.ContainsKey(termString))
@@ -107,7 +109,7 @@ namespace GrammarTools
             if (__EpsilonNonterminals != null)
                 return __EpsilonNonterminals;
 
-            List<Terminal> epsilonRightPart = new List<Terminal>() { __Epsilon };
+            List<Terminal> e = new List<Terminal>() { __Epsilon };
 
             HashSet<NonTerminal> epsilonNonterminals = new HashSet<NonTerminal>();
             HashSet<NonTerminal> currentStage = new HashSet<NonTerminal>();
@@ -115,7 +117,7 @@ namespace GrammarTools
             //Добавляем все нетерминалы, которые напрямую продуцируют в epsilon
             foreach (var nonterm in __NonTerminals.Values)
             {
-                if (DirectlyProduces(nonterm, epsilonRightPart.Cast<IToken>()))
+                if (DirectlyProduces(nonterm, e.Cast<IToken>()))
                     epsilonNonterminals.Add(nonterm);
             }
 
@@ -123,6 +125,7 @@ namespace GrammarTools
             //Добавляем только те нетерминалы, которые продуцирут в цепочку только из токенов прошлого шага
             do
             {
+                currentStage.Clear();
                 foreach (var rule in __Rules)
                 {
                     bool match = true;
@@ -135,7 +138,7 @@ namespace GrammarTools
                         }
                     }
 
-                    if (match)
+                    if (match && !epsilonNonterminals.Contains(rule.LeftPart))
                         currentStage.Add(rule.LeftPart);
                 }
 

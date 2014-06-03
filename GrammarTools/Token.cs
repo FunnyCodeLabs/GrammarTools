@@ -36,5 +36,10 @@ namespace GrammarTools
 
             return __Value.Equals(t.__Value);
         }
+
+        public override string ToString()
+        {
+            return __Value;
+        }
     }
 }

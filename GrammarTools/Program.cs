@@ -29,6 +29,12 @@ namespace GrammarTools
                 "E -> a", 
             };
             Grammar g = Grammar.Create(grammar);
+
+            var a = g.FindEpsilonNonterminals();
+            foreach (var item in a)
+            {
+                Console.WriteLine(item);
+            }
         }
     }
 }
