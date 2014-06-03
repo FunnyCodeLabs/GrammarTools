@@ -109,7 +109,25 @@ namespace GrammarTools
             if (__EpsilonNonterminals != null)
                 return __EpsilonNonterminals;
 
+            List<IToken> epsilonRightPart = new List<IToken>();
 
+            HashSet<NonTerminal> epsilonNonterminals = new HashSet<NonTerminal>();
+
+            //Добавляем все нетерминалы, которые напрямую продуцируют в epsilon
+            foreach (var nonterm in __NonTerminals.Values)
+            {
+                if (DirectlyProduces(nonterm, epsilonRightPart))
+                    epsilonNonterminals.Add(nonterm);
+            }
+
+            //Добавляем все нетерминалы, которые продуцирут в цепочку только из 
+
+            throw new NotImplementedException();
+        }
+
+        private bool DirectlyProduces(NonTerminal A, List<IToken> alpha)
+        {
+            return A.Rule.RightPart.SequenceEqual(alpha);
         }
     }
 }

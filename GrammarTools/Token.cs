@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GrammarTools
 {
-    class Token : IToken
+    public abstract class Token : IToken
     {
         private string __Value;
 
@@ -23,9 +23,9 @@ namespace GrammarTools
             }
         }
 
-        public bool IsTerminal
+        public abstract bool IsTerminal
         {
-            abstract get;
+            get;
         }
 
         public override bool Equals(object obj)

@@ -11,14 +11,9 @@ namespace GrammarTools
             : base(value)
         { }
 
-        public bool IsTerminal
+        public override bool IsTerminal
         {
             get { return true; }
-        }
-
-        public bool IsTerminal
-        {
-            get { return false; }
         }
     }
 }
