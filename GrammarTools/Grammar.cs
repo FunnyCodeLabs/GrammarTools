@@ -22,7 +22,7 @@ namespace GrammarTools
         private void AddRule(string line)
         {
             string[] rightLeft = line.Split(new string[] { "->" }, StringSplitOptions.RemoveEmptyEntries);
-            if (rightLeft.Length == 2)
+            if (rightLeft.Length < 2)
                 throw new ApplicationException("Error parsing: [" + line + "]");
 
 
@@ -98,8 +98,6 @@ namespace GrammarTools
             Grammar grammar = new Grammar();
             foreach (var line in input)
                 grammar.AddRule(line);
-
-
 
             return grammar;
         }

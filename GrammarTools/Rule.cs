@@ -17,5 +17,10 @@ namespace GrammarTools
             LeftPart.Rule = this;
             RightPart = right;
         }
+
+        public bool ContainsOnlyTerminals()
+        {
+            return false;
+        }
     }
 }

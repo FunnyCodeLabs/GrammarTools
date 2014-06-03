@@ -12,15 +12,15 @@ namespace GrammarTools
 
         public Token(string value)
         {
+            if (value == null)
+                throw new ArgumentNullException("value");
 
+            __Value = value;
         }
 
         public string Value
         {
-            get
-            {
-                return __Value;
-            }
+            get { return __Value; }
         }
 
         public abstract bool IsTerminal
