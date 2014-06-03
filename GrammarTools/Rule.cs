@@ -14,6 +14,7 @@ namespace GrammarTools
         public Rule(NonTerminal left, List<IToken> right)
         {
             LeftPart = left;
+            LeftPart.Rule = this;
             RightPart = right;
         }
     }
