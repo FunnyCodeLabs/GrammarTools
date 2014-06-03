@@ -14,13 +14,23 @@ namespace GrammarTools
         public Rule(NonTerminal left, List<IToken> right)
         {
             LeftPart = left;
-            LeftPart.Rule = this;
+
+            if (LeftPart.Rules == null)
+                LeftPart.Rules = new List<Rule>() { this };
+            else
+                LeftPart.Rules.Add(this);
+
             RightPart = right;
         }
 
         public bool ContainsOnlyTerminals()
         {
-            return false;
+            return RightPart.Where(token => token.IsTerminal).Count() == RightPart.Count;
+        }
+
+        public bool ContainsOnlyNonTerminals()
+        {
+            return RightPart.Where(token => !token.IsTerminal).Count() == RightPart.Count;
         }
     }
 }

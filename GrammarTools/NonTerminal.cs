@@ -16,7 +16,7 @@ namespace GrammarTools
             get { return true; }
         }
 
-        public Rule Rule
+        public List<Rule> Rules
         {
             get;
             set;
