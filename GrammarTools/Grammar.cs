@@ -250,6 +250,74 @@ namespace GrammarTools
             return result;
         }
 
+
+        private List<TokenSequence> First(IToken token, int k, ref int i)
+        {
+            if (token.IsTerminal)
+                return new List<TokenSequence>() { new TokenSequence() { token as Terminal } };
+            else
+            {
+                NonTerminal nonTerminal = token as NonTerminal;
+
+                List<TokenSequence> first = new List<TokenSequence>();
+                if ((i - 1) == k)
+                    return first;
+
+                foreach (var rule in nonTerminal.Rules)
+                {
+                    if (rule.ContainsOnlyTerminals())
+                    {
+                        var seq = new TokenSequence(rule.RightPart.Take(k));
+                        if (!first.Contains(seq))
+                            first.Add(seq);
+                    }
+                    else
+                    {
+                        List<TokenSequence> tempFirst;
+
+                        foreach (var item in rule.RightPart.Cast<Token>())
+                        {
+                            if (token.Equals(item))
+                                i++;
+
+                            tempFirst = First(item, k, ref i);
+
+                            if (token.Equals(item))
+                                i--;
+
+                            if (tempFirst.Count != 0)
+                                first = first.Union(tempFirst).ToList();
+
+                            if (i != 0)
+                                continue;
+
+
+                            if (tempFirst.Where(list => list.Contains(__Epsilon)).Count() == 0)
+                                break;
+                        }
+                    }
+                }
+
+                return first;
+            }
+        }
+
+        private List<TokenSequence> First(IToken token, int k)
+        {
+            int i = 0;
+            return First(token, k, ref i);
+        }
+
+        public Dictionary<IToken, List<TokenSequence>> First(int k)
+        {
+            Dictionary<IToken, List<TokenSequence>> res = new Dictionary<IToken, List<TokenSequence>>();
+            foreach (var item in __NonTerminals.Values)
+                res.Add(item, First(item, k));
+
+            return res;
+        }
+
+
         public static Grammar Create(string[] input)
         {
             Grammar grammar = new Grammar();

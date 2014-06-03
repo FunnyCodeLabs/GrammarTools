@@ -32,5 +32,10 @@ namespace GrammarTools
         {
             return RightPart.Where(token => !token.IsTerminal).Count() == RightPart.Count;
         }
+
+        public override string ToString()
+        {
+            return LeftPart.ToString() + " -> " + String.Concat(RightPart.Select(t => t.ToString() + " ")).Trim();
+        } 
     }
 }

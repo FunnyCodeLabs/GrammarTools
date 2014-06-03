@@ -51,6 +51,7 @@
     <Compile Include="Terminal.cs" />
     <Compile Include="IToken.cs" />
     <Compile Include="Token.cs" />
+    <Compile Include="TokenSequence.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
