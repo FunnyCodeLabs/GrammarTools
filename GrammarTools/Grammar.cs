@@ -12,10 +12,17 @@ namespace GrammarTools
         private Dictionary<string, NonTerminal> __NonTerminals = new Dictionary<string, NonTerminal>();
         private Dictionary<string, Terminal> __Terminals = new Dictionary<string, Terminal>();
         private List<Rule> __Rules = new List<Rule>();
-        private readonly Terminal __Epsilon = new Terminal("e");
+
+        private Rule __StartRule;
 
         private HashSet<NonTerminal> __EpsilonNonterminals = null;
         private HashSet<NonTerminal> __LeftRecursiveNonterminals = null;
+        private HashSet<NonTerminal> __RightRecursiveNonterminals = null;
+
+        private static string __TerminalPattern = "[a-z+*()]+";
+        private static string __NonTerminalPattern = "[A-Z]+";
+        private static readonly Terminal __Epsilon = new Terminal("e");
+        private static readonly Terminal __EOF = new Terminal("$");
 
         public Grammar()
         {
@@ -32,11 +39,31 @@ namespace GrammarTools
             }
         }
 
+        public HashSet<NonTerminal> LeftRecursiveNonterminals
+        {
+            get
+            {
+                if (__LeftRecursiveNonterminals == null)
+                    RecursiveNonterminals();
+                return __LeftRecursiveNonterminals;
+            }
+        }
+
+        public HashSet<NonTerminal> RightRecursiveNonterminals
+        {
+            get
+            {
+                if (__RightRecursiveNonterminals == null)
+                    RecursiveNonterminals(false);
+                return __RightRecursiveNonterminals;
+            }
+        }
+
         #region Grammar construction
 
         private void AddRule(string line)
         {
-            Regex rule = new Regex(@"([A-Z])\s+->\s+((([A-Z]|[a-z])\s*)+)");
+            Regex rule = new Regex(String.Format(@"({0})\s+->\s+((({0}|{1})\s*)+)", __NonTerminalPattern, __TerminalPattern));
 
             var match = rule.Match(line);
 
@@ -69,14 +96,15 @@ namespace GrammarTools
             }
 
             Rule r = new Rule(leftNonTerminal, rightTokens);
+            if (__StartRule == null)
+                __StartRule = r;
             __Rules.Add(r);
         }
 
         private bool AddNonTerminal(string nonTermString, out NonTerminal nonTerminal)
         {
-            string nonTermPattern = "[A-Z]+";
             nonTerminal = null;
-            if (!Regex.IsMatch(nonTermString, nonTermPattern))
+            if (!Regex.IsMatch(nonTermString, __NonTerminalPattern))
                 return false;
 
             if (__NonTerminals.ContainsKey(nonTermString))
@@ -92,11 +120,9 @@ namespace GrammarTools
 
         private bool AddTerminal(string termString, out Terminal terminal)
         {
-            string termPattern = "[a-z]+";
-
             terminal = null;
 
-            if (!Regex.IsMatch(termString, termPattern))
+            if (!Regex.IsMatch(termString, __TerminalPattern))
                 return false;
 
             if (__Terminals.ContainsKey(termString))
@@ -196,8 +222,16 @@ namespace GrammarTools
 
         public IEnumerable<NonTerminal> RecursiveNonterminals(bool leftRecursive = true)
         {
-            if (__LeftRecursiveNonterminals != null)
-                return __LeftRecursiveNonterminals;
+            if (leftRecursive)
+            {
+                if (__LeftRecursiveNonterminals != null)
+                    return __LeftRecursiveNonterminals;
+            }
+            else
+            {
+                if (__RightRecursiveNonterminals != null)
+                    return __RightRecursiveNonterminals;
+            }
 
             HashSet<NonTerminal> result = new HashSet<NonTerminal>();
 
@@ -247,76 +281,79 @@ namespace GrammarTools
                     result.Add(nonterm);
             }
 
+            if (leftRecursive)
+                __LeftRecursiveNonterminals = result;
+            else
+                __RightRecursiveNonterminals = result;
+
             return result;
         }
 
-
-        private List<TokenSequence> First(IToken token, int k, ref int i)
+        private HashSet<IToken> First(IToken token)
         {
             if (token.IsTerminal)
-                return new List<TokenSequence>() { new TokenSequence() { token as Terminal } };
-            else
+                return new HashSet<IToken>() { token };
+
+            NonTerminal nonterm = token as NonTerminal;
+
+            if (LeftRecursiveNonterminals.Contains(nonterm))
+                throw new InvalidOperationException("Nonterminal can't be left recursive!");
+
+            HashSet<IToken> firstSet = new HashSet<IToken>();
+            HashSet<IToken> eps = new HashSet<IToken>(){__Epsilon};
+            bool containsEps = true;
+
+            foreach (var rule in nonterm.Rules)
             {
-                NonTerminal nonTerminal = token as NonTerminal;
-
-                List<TokenSequence> first = new List<TokenSequence>();
-                if ((i - 1) == k)
-                    return first;
-
-                foreach (var rule in nonTerminal.Rules)
+                containsEps = true;
+                foreach (var t in rule.RightPart)
                 {
-                    if (rule.ContainsOnlyTerminals())
+                    if (containsEps)
                     {
-                        var seq = new TokenSequence(rule.RightPart.Take(k));
-                        if (!first.Contains(seq))
-                            first.Add(seq);
+                        var first_yi = First(t);
+                        containsEps = first_yi.Contains((IToken) __Epsilon);
+                        first_yi.ExceptWith(eps);
+                        firstSet.UnionWith(first_yi);
                     }
                     else
-                    {
-                        List<TokenSequence> tempFirst;
-
-                        foreach (var item in rule.RightPart.Cast<Token>())
-                        {
-                            if (token.Equals(item))
-                                i++;
-
-                            tempFirst = First(item, k, ref i);
-
-                            if (token.Equals(item))
-                                i--;
-
-                            if (tempFirst.Count != 0)
-                                first = first.Union(tempFirst).ToList();
-
-                            if (i != 0)
-                                continue;
-
-
-                            if (tempFirst.Where(list => list.Contains(__Epsilon)).Count() == 0)
-                                break;
-                        }
-                    }
+                        break;
                 }
+            }
 
-                return first;
+            if (containsEps || EpsilonNonterminals.Contains(nonterm))
+                firstSet.Add(__Epsilon);
+
+            return firstSet;
+        }
+
+        private HashSet<IToken> Follow(NonTerminal nonterm)
+        {
+            HashSet<IToken> followSet = new HashSet<IToken>();
+
+            if (__StartRule.LeftPart == nonterm)
+                followSet.Add(__EOF);
+
+            foreach (var rule in __Rules)
+            {
+                if (rule.RightPart.Contains(nonterm))
+                {
+                    var right = AllRightFrom(rule, nonterm);
+                    if (right.Count() == 0)
+                        followSet.UnionWith(Follow(rule.LeftPart));
+
+                    var firstRight = 
+                }
             }
         }
 
-        private List<TokenSequence> First(IToken token, int k)
+        public Dictionary<IToken, HashSet<IToken>> First()
         {
-            int i = 0;
-            return First(token, k, ref i);
-        }
-
-        public Dictionary<IToken, List<TokenSequence>> First(int k)
-        {
-            Dictionary<IToken, List<TokenSequence>> res = new Dictionary<IToken, List<TokenSequence>>();
+            Dictionary<IToken, HashSet<IToken>> res = new Dictionary<IToken, HashSet<IToken>>();
             foreach (var item in __NonTerminals.Values)
-                res.Add(item, First(item, k));
+                res.Add(item, First(item));
 
             return res;
         }
-
 
         public static Grammar Create(string[] input)
         {

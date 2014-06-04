@@ -16,19 +16,22 @@ namespace GrammarTools
                 //"A -> e",
                 //"B -> B b"
                 //"S → aS1"
-                "S -> a F",
-                "F -> A b B F",
-                "F -> e",
-                "A -> a D",
+                "S -> B A",
+
+                "A -> + B A",
                 "A -> e",
-                "D -> b",
+
+                "B -> D C",
+
+                "C -> * D C",
+                "C -> e",
+
+                "D -> ( S )",
                 "D -> a",
-                "B -> c",
-                "B -> e"
             };
 
             Grammar g = Grammar.Create(grammar);
-            PrintFirst(g.First(1));
+            PrintFirst(g.First());
             //var b = g.FindEpsilonNonterminals();
             //foreach (var item in b)
             //{
@@ -44,7 +47,7 @@ namespace GrammarTools
             //}
         }
 
-        private static void PrintFirst(Dictionary<IToken, List<TokenSequence>> first)
+        private static void PrintFirst(Dictionary<IToken, HashSet<IToken>> first)
         {
             foreach (var item in first)
             {
