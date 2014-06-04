@@ -366,6 +366,9 @@ namespace GrammarTools
             HashSet<IToken> followSet = new HashSet<IToken>();
             HashSet<IToken> eps = new HashSet<IToken>() { __Epsilon };
 
+            if (nonterm.Equals(__StartRule.LeftPart))
+                followSet.Add(__Epsilon);
+
             foreach (var rule in __Rules)
             {
                 if (rule.RightPart.Contains(nonterm) && !nonterm.Equals(rule.LeftPart))
@@ -378,7 +381,6 @@ namespace GrammarTools
                         if (firstRight.Contains(__Epsilon))
                             followSet.UnionWith(Follow(rule.LeftPart));
 
-                        firstRight.ExceptWith(eps);
                         followSet.UnionWith(firstRight);
                     }
                     else

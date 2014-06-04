@@ -31,8 +31,8 @@ namespace GrammarTools
             };
 
             Grammar g = Grammar.Create(grammar);
-            var a = g.Follow(g.NonTerminals[3]);
-
+            //var a = g.Follow(g.NonTerminals[3]);
+            Print(g.Follow());
 
             //var b = g.FindEpsilonNonterminals();
             //foreach (var item in b)
@@ -49,9 +49,20 @@ namespace GrammarTools
             //}
         }
 
-        private static void Print(HashSet<IToken> hashSet, bool p)
+        private static void Print(Dictionary<IToken, HashSet<IToken>> follow)
         {
-            throw new NotImplementedException();
+            foreach (var item in follow)
+            {
+                Console.Write("Follow (" + item.Key + ")" + " = { ");
+                foreach (var i in item.Value)
+                {
+                    Console.Write(i.ToString());
+                    Console.Write(" ");
+                }
+
+                Console.Write("}");
+                Console.WriteLine();
+            }
         }
     }
 }
