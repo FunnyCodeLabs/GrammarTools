@@ -21,12 +21,12 @@ namespace GrammarTools
 
         private static string __TerminalPattern = "[a-z+*()]+";
         private static string __NonTerminalPattern = "[A-Z]+";
-        private static readonly Terminal __Epsilon = new Terminal("e");
-        private static readonly Terminal __EOF = new Terminal("$");
+        private static readonly IToken __Epsilon = new Terminal("e");
+        private static readonly IToken __EOF = new Terminal("$");
 
         public Grammar()
         {
-            __Terminals.Add("e", __Epsilon);
+            __Terminals.Add("e", (Terminal) __Epsilon);
         }
 
         public HashSet<NonTerminal> EpsilonNonterminals
@@ -180,7 +180,7 @@ namespace GrammarTools
             if (__EpsilonNonterminals != null)
                 return __EpsilonNonterminals;
 
-            List<Terminal> e = new List<Terminal>() { __Epsilon };
+            List<Terminal> e = new List<Terminal>() { (Terminal)__Epsilon };
 
             HashSet<NonTerminal> epsilonNonterminals = new HashSet<NonTerminal>();
             HashSet<NonTerminal> currentStage = new HashSet<NonTerminal>();
@@ -311,7 +311,7 @@ namespace GrammarTools
                     if (containsEps)
                     {
                         var first_yi = First(t);
-                        containsEps = first_yi.Contains((IToken) __Epsilon);
+                        containsEps = first_yi.Contains(__Epsilon);
                         first_yi.ExceptWith(eps);
                         firstSet.UnionWith(first_yi);
                     }
@@ -321,6 +321,33 @@ namespace GrammarTools
             }
 
             if (containsEps || EpsilonNonterminals.Contains(nonterm))
+                firstSet.Add(__Epsilon);
+
+            return firstSet;
+        }
+
+        private HashSet<IToken> First(IEnumerable<IToken> sequence)
+        {
+            HashSet<IToken> firstSet = new HashSet<IToken>();
+            HashSet<IToken> eps = new HashSet<IToken>(){__Epsilon};
+            bool containsEps = true;
+
+            List<HashSet<IToken>> firsts = new List<HashSet<IToken>>();
+
+            foreach (var token in sequence)
+            {
+                if (containsEps)
+                {
+                    var first_i = First(token);
+                    firsts.Add(first_i);
+                    containsEps = first_i.Contains(__Epsilon);
+                    firstSet.UnionWith(first_i);
+                }
+                else
+                    break;
+            }
+
+            if (firsts.Count == sequence.Count() && firsts.All(x => x.Contains(__Epsilon)))
                 firstSet.Add(__Epsilon);
 
             return firstSet;
@@ -340,10 +367,18 @@ namespace GrammarTools
                     var right = AllRightFrom(rule, nonterm);
                     if (right.Count() == 0)
                         followSet.UnionWith(Follow(rule.LeftPart));
+                    else
+                    {
+                        var firstRight = First(right);
+                        followSet.UnionWith(firstRight);
 
-                    var firstRight = 
+                        if (firstRight.Contains(__Epsilon))
+                            followSet.UnionWith(Follow(rule.LeftPart));
+                    }
                 }
             }
+
+            throw new NotImplementedException();
         }
 
         public Dictionary<IToken, HashSet<IToken>> First()
