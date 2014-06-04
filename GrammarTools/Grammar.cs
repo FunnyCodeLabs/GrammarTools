@@ -22,7 +22,6 @@ namespace GrammarTools
         private static string __TerminalPattern = "[a-z+*()]+";
         private static string __NonTerminalPattern = "[A-Z]+";
         private static readonly IToken __Epsilon = new Terminal("e");
-        private static readonly IToken __EOF = new Terminal("$");
 
         public Grammar()
         {
@@ -56,6 +55,14 @@ namespace GrammarTools
                 if (__RightRecursiveNonterminals == null)
                     RecursiveNonterminals(false);
                 return __RightRecursiveNonterminals;
+            }
+        }
+
+        public List<NonTerminal> NonTerminals
+        {
+            get
+            {
+                return __NonTerminals.Values.ToList();
             }
         }
 
@@ -339,8 +346,9 @@ namespace GrammarTools
                 if (containsEps)
                 {
                     var first_i = First(token);
-                    firsts.Add(first_i);
+                    firsts.Add(new HashSet<IToken>(first_i));
                     containsEps = first_i.Contains(__Epsilon);
+                    first_i.ExceptWith(eps);
                     firstSet.UnionWith(first_i);
                 }
                 else
@@ -353,32 +361,43 @@ namespace GrammarTools
             return firstSet;
         }
 
-        private HashSet<IToken> Follow(NonTerminal nonterm)
+        public HashSet<IToken> Follow(NonTerminal nonterm)
         {
             HashSet<IToken> followSet = new HashSet<IToken>();
-
-            if (__StartRule.LeftPart == nonterm)
-                followSet.Add(__EOF);
+            HashSet<IToken> eps = new HashSet<IToken>() { __Epsilon };
 
             foreach (var rule in __Rules)
             {
-                if (rule.RightPart.Contains(nonterm))
+                if (rule.RightPart.Contains(nonterm) && !nonterm.Equals(rule.LeftPart))
                 {
                     var right = AllRightFrom(rule, nonterm);
-                    if (right.Count() == 0)
-                        followSet.UnionWith(Follow(rule.LeftPart));
-                    else
+                    if (right.Count() != 0)
                     {
                         var firstRight = First(right);
-                        followSet.UnionWith(firstRight);
 
                         if (firstRight.Contains(__Epsilon))
                             followSet.UnionWith(Follow(rule.LeftPart));
+
+                        firstRight.ExceptWith(eps);
+                        followSet.UnionWith(firstRight);
+                    }
+                    else
+                    {
+                        followSet.UnionWith(Follow(rule.LeftPart));
                     }
                 }
             }
 
-            throw new NotImplementedException();
+            return followSet;
+        }
+
+        public Dictionary<IToken, HashSet<IToken>> Follow()
+        {
+            Dictionary<IToken, HashSet<IToken>> res = new Dictionary<IToken, HashSet<IToken>>();
+            foreach (var item in __NonTerminals.Values)
+                res.Add(item, Follow(item));
+
+            return res;
         }
 
         public Dictionary<IToken, HashSet<IToken>> First()

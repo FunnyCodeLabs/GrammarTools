@@ -31,7 +31,9 @@ namespace GrammarTools
             };
 
             Grammar g = Grammar.Create(grammar);
-            PrintFirst(g.First());
+            var a = g.Follow(g.NonTerminals[3]);
+
+
             //var b = g.FindEpsilonNonterminals();
             //foreach (var item in b)
             //{
@@ -47,21 +49,9 @@ namespace GrammarTools
             //}
         }
 
-        private static void PrintFirst(Dictionary<IToken, HashSet<IToken>> first)
+        private static void Print(HashSet<IToken> hashSet, bool p)
         {
-            foreach (var item in first)
-            {
-                Console.Write("First (" + item.Key + ")" + " = { ");
-                foreach (var i in item.Value)
-                {
-                    Console.Write(i.ToString());
-                    Console.Write(" ");
-                }
-
-                Console.Write("}");
-                Console.WriteLine();
-            }
-
+            throw new NotImplementedException();
         }
     }
 }
